@@ -12,3 +12,6 @@ data/
 .ipynb_checkpoints/
 
 .venv/
+
+# ✅ EXCEÇÃO: permitir a imagem da capa
+!cover/IMAGE.png
