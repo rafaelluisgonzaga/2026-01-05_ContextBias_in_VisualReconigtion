@@ -161,4 +161,4 @@ Este projeto demonstra maturidade em Machine Learning ao:
 
 Projeto desenvolvido por mim, com apoio de ferramentas de IA como suporte técnico.
 
-"""
+ 
