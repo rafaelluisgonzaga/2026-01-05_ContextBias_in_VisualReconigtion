@@ -8,28 +8,37 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 DATASET_PATH = "data/processed/dataset.csv"
+FEEDBACK_PATH = "data/processed/feedback.csv"
 
 
 def run():
-    # 1. Carregar dados
+    # 1. Carregar dataset principal
     df = pd.read_csv(DATASET_PATH)
 
-    # 2. Label real (cidade)
+    # 2. Carregar feedback humano
+    feedback = pd.read_csv(
+        FEEDBACK_PATH,
+        names=["image_path", "chosen_city", "true_city", "correct"]
+    )
+
+    # 3. Criar pesos (default = 1.0)
+    df["sample_weight"] = 1.0
+
+    # 4. Aumentar peso das imagens erradas pelo modelo
+    wrong_images = feedback[feedback["correct"] == False]["image_path"]
+
+    df.loc[df["image_path"].isin(wrong_images), "sample_weight"] = 2.0
+
+    # 5. Labels reais
     y = df["label"]
 
-    # 3. Features SEM vazamento de identidade
-    X = df[
-        [
-            "brightness",  # aparência da imagem
-            "region",      # contexto amplo (não único)
-        ]
-    ]
+    # 6. Features SEM vazamento
+    X = df[["brightness", "region"]]
 
-    # 4. Tipos de variáveis
+    # 7. Tipos de variáveis
     numeric_features = ["brightness"]
     categorical_features = ["region"]
 
-    # 5. Pré-processamento
     preprocessor = ColumnTransformer(
         transformers=[
             ("num", StandardScaler(), numeric_features),
@@ -37,7 +46,6 @@ def run():
         ]
     )
 
-    # 6. Pipeline
     model = Pipeline(
         steps=[
             ("preprocess", preprocessor),
@@ -45,22 +53,27 @@ def run():
         ]
     )
 
-    # 7. Split treino / teste (natural)
-    X_train, X_test, y_train, y_test = train_test_split(
+    # 8. Split treino / teste
+    X_train, X_test, y_train, y_test, w_train, w_test = train_test_split(
         X,
         y,
+        df["sample_weight"],
         test_size=0.3,
         random_state=42,
         stratify=y,
     )
 
-    # 8. Treinar
-    model.fit(X_train, y_train)
+    # 9. Treinar com pesos
+    model.fit(
+        X_train,
+        y_train,
+        classifier__sample_weight=w_train
+    )
 
-    # 9. Avaliar
+    # 10. Avaliar
     y_pred = model.predict(X_test)
 
-    print("\n📈 RESULTADO DO TREINO (SEM VAZAMENTO DE IDENTIDADE)")
+    print("\n📈 RESULTADO DO TREINO (COM FEEDBACK HUMANO)")
     print(f"Acurácia: {accuracy_score(y_test, y_pred):.2f}\n")
     print("📊 Classification report:")
     print(classification_report(y_test, y_pred))
