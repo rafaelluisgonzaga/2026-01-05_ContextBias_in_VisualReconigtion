@@ -156,4 +156,9 @@ Este projeto demonstra maturidade em Machine Learning ao:
 - evitar overfitting artificial,
 - priorizar interpretabilidade,
 - fechar o ciclo completo: dados → modelo → erro → humano → ajuste.
+
+## 📌 Autoria
+
+Projeto desenvolvido por mim, com apoio de ferramentas de IA como suporte técnico.
+
 """
